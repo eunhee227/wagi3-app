@@ -3,6 +3,8 @@ import { createAction, handleActions } from "redux-actions";
 /** action types */
 const SET_FIELD = "auth/SET_FIELD";
 const RESET_FORM = "auth/RESET_FORM";
+const SET_USER = "auth/SET_USER";
+const LOGOUT = "auth/LOGOUT";
 
 /** action creators */
 export const setField = createAction(
@@ -11,6 +13,9 @@ export const setField = createAction(
 );
 
 export const resetForm = createAction(RESET_FORM, (form) => form);
+export const setUser = createAction(SET_USER, (user) => user);
+export const logout = createAction(LOGOUT);
+
 
 /** initial state */
 const initialState = {
@@ -42,7 +47,18 @@ const auth = handleActions(
       ...state,
       [form]: initialState[form],
     }),
-  },
+
+    [SET_USER]: (state, { payload: user }) => ({
+      ...state,
+      user,
+    }),
+
+    [LOGOUT]: (state) => ({
+      ...state,
+      user: null,
+    }),
+
+      },
   initialState
 );
 

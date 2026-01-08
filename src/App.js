@@ -3,11 +3,19 @@ import {Route, Routes} from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Home from './pages/Home';
+import ProtectedRoute from './routes/ProtectedRoute';
 
 const App= () => {
   return (
     <Routes>
-      <Route path="/" element={<Home/>}/>
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/login" element={<LoginPage/>}/>
       <Route path="/register" element={<RegisterPage/>}/>
       <Route path="/@:username">
