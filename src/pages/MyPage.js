@@ -3,9 +3,13 @@ import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import BottomNav from "../components/common/BottomNav";
 import { setUser } from "../modules/auth";
-import { updateUserIntro, updateUserPassword } from "../mock/mockUserDB";
 import { useNavigate } from "react-router-dom";
-import { deleteUser } from "../mock/mockUserDB";
+import {
+  updateUserIntro,
+  updateUserPassword,
+  verifyPassword,      
+  deleteUser         
+} from "../mock/mockUserDB";
 
 // assets
 import bg254 from "../assets/Rectangle-254.png";
@@ -35,6 +39,10 @@ export default function MyPage() {
   const [pwd, setPwd] = useState({ current: "", next: "", next2: "" });
   const [introDraft, setIntroDraft] = useState("");
 
+  const [openWithdraw, setOpenWithdraw] = useState(false);
+  const [withdrawPwd, setWithdrawPwd] = useState("");
+
+
   // user 바뀌면 introDraft 갱신
   useEffect(() => {
     setIntroDraft(user?.intro ?? "");
@@ -43,6 +51,17 @@ export default function MyPage() {
   // 화면 표시
   const displayName = user?.name || user?.username || user?.id ;
   const introText = user?.intro || "환영합니다.";
+
+    const openWithdrawPanel = () => {
+    setOpenPwd(false);
+    setOpenIntro(false);
+    setOpenWithdraw(true);
+  };
+
+  const closeWithdrawPanel = () => {
+    setOpenWithdraw(false);
+    setWithdrawPwd("");
+  };
 
   // 패널 열기/닫기
   const openPwdPanel = () => {
@@ -116,14 +135,6 @@ export default function MyPage() {
       dispatch(setUser(res.user)); // ✅ DB 결과로 redux 동기화
       setOpenIntro(false);
       alert("한줄소개 변경 완료!(목업)");
-
-    
-
-    // ✅ 백엔드 없으니 redux user만 업데이트 (목업)
-    dispatch(setUser({ ...user, intro: v }));
-
-    alert("한줄소개 변경 완료!(목업)");
-    setOpenIntro(false);
   };
 
   return (
@@ -159,20 +170,7 @@ export default function MyPage() {
               alert("로그인 정보가 없습니다.");
               return;
             }
-
-            const ok = window.confirm("정말 회원탈퇴 하시겠어요? (목업)");
-            if (!ok) return;
-
-            const res = deleteUser(user.id);
-            if (!res.ok) {
-              alert(res.message);
-              return;
-            }
-
-            // ✅ 로그아웃 처리
-            dispatch(setUser(null));
-            alert("회원탈퇴 완료(목업).");
-            navigate("/login");
+            openWithdrawPanel();
           }}
         >
           <BtnText2>회원탈퇴</BtnText2>
@@ -212,7 +210,7 @@ export default function MyPage() {
         )}
         {/* ✅ 한줄소개 패널 */}
         {openIntro && (
-          <IntroPanel>
+          <PwdPanel>
             <PanelBg />
             <PanelTopBar src={rect308_1} alt="" />
             <PanelTitle>한줄소개 변경</PanelTitle>
@@ -222,21 +220,70 @@ export default function MyPage() {
             </PanelClose>
 
             <PanelFrameSvg src={rect311} alt="" />
-
             <SettingText>+설정+</SettingText>
 
-            <IntroEditLabel>한줄소개 :</IntroEditLabel>
-            <IntroEditInput
+            <PanelLabel2>한줄소개 :</PanelLabel2>
+
+            <Input2
+              type="text"
               value={introDraft}
               onChange={(e) => setIntroDraft(e.target.value)}
-              placeholder=""
               maxLength={30}
             />
 
-            <IntroSaveBtn type="button" onClick={onSaveIntro}>
+            <SubmitBtn type="button" onClick={onSaveIntro}>
               저장하기
-            </IntroSaveBtn>
-          </IntroPanel>
+            </SubmitBtn>
+          </PwdPanel>
+        )}
+        {openWithdraw && (
+          <PwdPanel>
+            <PanelBg />
+            <PanelTopBar src={rect308_1} alt="" />
+            <PanelTitle>회원탈퇴</PanelTitle>
+
+            <PanelClose type="button" onClick={closeWithdrawPanel} aria-label="close">
+              <PanelCloseImg src={cancelIcon} alt="" />
+            </PanelClose>
+
+            <PanelFrameSvg src={rect311} alt="" />
+            <SettingText>+설정+</SettingText>
+
+            <PanelLabel2>현재 비밀번호 :</PanelLabel2>
+
+            <Input2
+              type="password"
+              value={withdrawPwd}
+              onChange={(e) => setWithdrawPwd(e.target.value)}
+            />
+
+            <SubmitBtn
+              type="button"
+              onClick={() => {
+                if (!withdrawPwd) {
+                  alert("비밀번호를 입력해주세요.");
+                  return;
+                }
+                const v = verifyPassword(user.id, withdrawPwd);
+                if (!v.ok) { alert(v.message); return; }    
+
+                const ok = window.confirm("정말 탈퇴하시겠어요? (목업)");
+                if (!ok) return;
+
+                const res = deleteUser(user.id);
+                if (!res.ok) {
+                  alert(res.message);
+                  return;
+                }
+
+                dispatch(setUser(null));
+                alert("회원탈퇴 완료(목업).");
+                navigate("/login");
+              }}
+            >
+              탈퇴하기
+            </SubmitBtn>
+          </PwdPanel>
         )}
       </Panel>
 
@@ -633,8 +680,6 @@ const IntroPanel = styled.div`
   width: 301px;
   padding: 12px;
   background: #ffffff;
-  border: 1px solid #999;
-  border-radius: 6px;
   z-index: 10;
 `;
 
@@ -655,7 +700,6 @@ const IntroSaveBtn = styled.button`
   margin-top: 8px;
   width: 100%;
   height: 32px;
-  background: #acdb68;
   border: none;
   cursor: pointer;
   font-size: 14px;

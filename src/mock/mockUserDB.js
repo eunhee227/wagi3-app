@@ -90,3 +90,13 @@ export function deleteUser(userId) {
   saveDB(next);
   return { ok: true };
 }
+
+export function verifyPassword(id, currentPassword) {
+  const db = loadDB();
+  const user = db.find((u) => u.id === id);
+  if (!user) return { ok: false, message: "유저를 찾을 수 없습니다." };
+  if (user.password !== currentPassword) {
+    return { ok: false, message: "현재 비밀번호가 올바르지 않습니다." };
+  }
+  return { ok: true, user };
+}
