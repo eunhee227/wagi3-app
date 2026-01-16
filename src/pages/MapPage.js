@@ -1,15 +1,16 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setUser } from "../modules/auth";
+import BottomNav from "../components/common/BottomNav";
 
-export default function HomePage() {
+export default function MapPage() {
   const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   return (
     <div>
-      HOME<br />
+      Map<br />
       user: {user ? `${user.name} (${user.id})` : "none"}
       <br />
       <button
@@ -20,6 +21,7 @@ export default function HomePage() {
       >
         로그아웃
       </button>
+      <BottomNav />
     </div>
   );
 }

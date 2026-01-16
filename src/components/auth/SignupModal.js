@@ -2,6 +2,8 @@ import styled from "styled-components";
 import {useDispatch, useSelector} from "react-redux";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { isDuplicatedId, addUser } from "../../mock/mockUserDB";
+import { setUser } from "../../modules/auth"; // 등록 후 바로 로그인 처리
 
 
 import logo from "../../assets/logo.png";
@@ -15,6 +17,220 @@ import { setField, resetForm } from "../../modules/auth";
  * 신규가입 창(모달/패널)
  */
 
+
+export default function SignupModal({onClose, onCheckDuplicate, onSubmit,}) {
+  const [idCheckResult, setIdCheckResult] = useState(null);
+  const [idCheckMessage, setIdCheckMessage] = useState("");
+  const dispatch = useDispatch();
+  const form =
+  useSelector((state) => state.auth?.register) ?? {
+    id: "",
+    email: "",
+    password: "",
+    passwordConfirm: "",
+    intro: "",
+  };
+  const [submitResult, setSubmitResult] = useState(null);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [checkedId, setCheckedId] = useState(""); 
+  const navigate = useNavigate();
+  const currentId = (form.id || "").trim();
+  const isIdCheckOK = idCheckResult === "ok" && checkedId === currentId;
+
+
+  const onChange = (key) => (e) => {
+    dispatch(setField({ form: "register", key, value: e.target.value }));
+  };
+
+  const validateRegisterForm = () => {
+    const id = (form.id || "").trim();
+    const email = (form.email || "").trim();
+    const pw = form.password || "";
+    const pw2 = form.passwordConfirm || "";
+    const intro = (form.intro || "").trim();
+
+    // 중복확인 여부
+    if (!isIdCheckOK) {
+      return { ok: false, message: "아이디 중복확인을 먼저 해주세요." };
+    }
+
+    // 필수값
+    if (!id) return { ok: false, message: "아이디를 입력해주세요." };
+    if (!email) return { ok: false, message: "이메일을 입력해주세요." };
+    if (!pw) return { ok: false, message: "비밀번호를 입력해주세요." };
+    if (!pw2) return { ok: false, message: "비밀번호 확인을 입력해주세요." };
+
+    // 이메일 형식
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { ok: false, message: "이메일 형식이 올바르지 않습니다." };
+    }
+
+    // 비밀번호 정책
+    if (pw.length < 6) {
+      return { ok: false, message: "비밀번호는 6자 이상이어야 합니다." };
+    }
+
+    // 비밀번호 확인
+    if (pw !== pw2) {
+      return { ok: false, message: "비밀번호가 일치하지 않습니다." };
+    }
+
+    // 한줄소개(선택)
+    if (intro.length > 30) {
+      return { ok: false, message: "한줄소개는 30자 이내로 입력해주세요." };
+    }
+
+    return { ok: true };
+  };
+
+  return (
+    <Root>
+      <OuterFrame />
+      <InnerFrame />
+      <Border />
+
+      <LogoImg src={logo} alt="" />
+      <TopTitle>신규가입</TopTitle>
+
+      <CancelBtn type="button" onClick={() => onClose?.()}>
+        <CancelImg src={cancelImg} alt="close" />
+      </CancelBtn>
+
+      <Group157Img src={group157} alt="" />
+      <SectionTitle>가입자 정보</SectionTitle>
+
+      <Arrow135 src={arrow} alt="" />
+      <Arrow182 src={arrow} alt="" />
+      <Arrow229 src={arrow} alt="" />
+      <Arrow276 src={arrow} alt="" />
+      <Arrow347 src={arrow} alt="" />
+
+      <Line1 />
+      <Line2 />
+      <Line3 />
+      <Line4 />
+
+      <IdLabel>아이디:</IdLabel>
+      <IdInput value={form.id} onChange={ (e) => { 
+        onChange("id")(e); 
+        setIdCheckResult(null);
+        setIdCheckMessage("");
+        setCheckedId("");
+
+        setSubmitResult(null);
+        setSubmitMessage("");
+        }} />
+
+      <EmailLabel>이메일:</EmailLabel>
+      <EmailInput value={form.email} onChange={(e) => {
+        onChange("email")(e);
+        setSubmitResult(null);
+        setSubmitMessage("");
+        }} />
+
+      <PwLabel>비밀번호:</PwLabel>
+      <PwInput type="password" value={form.password} onChange={(e) => {
+          onChange("password")(e);
+          setSubmitResult(null);
+          setSubmitMessage("");
+        }} />
+
+      <Pw2Label>비밀번호 확인:</Pw2Label>
+      <Pw2Input
+        type="password"
+        value={form.passwordConfirm}
+        onChange={(e) => {
+          onChange("passwordConfirm")(e);
+          setSubmitResult(null);
+          setSubmitMessage("");
+        }}
+      />
+
+      <IntroLabel>한줄소개:</IntroLabel>
+      <IntroInput value={form.intro} onChange={(e) => {
+          onChange("intro")(e);
+          setSubmitResult(null);
+          setSubmitMessage("");
+        }} />
+
+      <CheckDupBtn 
+      type="button" 
+      onClick={() => {
+        const id = (form.id || "").trim();
+        if (!id) {
+          setIdCheckResult("fail");
+          setIdCheckMessage("아이디를 입력해주세요.");
+          setCheckedId("");
+          return;
+        }
+
+        if (isDuplicatedId(id)) {            // ⬅️ 아래 에러2도 같이 해결
+          setIdCheckResult("fail");
+          setIdCheckMessage("사용 할 수 없는 아이디 입니다.");
+          setCheckedId("");
+        } else {
+          setIdCheckResult("ok");
+          setIdCheckMessage("사용 가능한 아이디 입니다.");
+          setCheckedId(id);
+    }
+      }}>
+        중복확인
+      </CheckDupBtn>
+
+      {idCheckResult && (
+        <CheckResultText result={idCheckResult}>
+          {idCheckMessage}
+        </CheckResultText>
+      )}
+      {submitResult && (
+        <SubmitResultText result={submitResult}>
+          {submitMessage}
+        </SubmitResultText>
+      )}
+
+      <SubmitBtn
+        type="button"
+        disabled={! isIdCheckOK}
+        onClick={() => {
+          // 이전 결과 초기화
+          setSubmitResult(null);
+          setSubmitMessage("");
+
+          const v = validateRegisterForm();
+          if (!v.ok) {
+            setSubmitResult("fail");
+            setSubmitMessage(v.message);
+            return;
+          }
+
+          const newUser = {
+            id: form.id.trim(),
+            password: form.password,
+            name: form.id.trim(),          // name = id (원하면 입력칸 추가)
+            intro: (form.intro || "").trim() || "환영합니다.",
+          };
+
+          const res = addUser(newUser);
+          if (!res.ok) {
+            setSubmitResult("fail");
+            setSubmitMessage(res.message);
+            return;
+          }
+
+          setSubmitResult("ok");
+          setSubmitMessage("등록 완료!");
+
+          // ✅ (선택) 가입하자마자 로그인 상태로 만들기
+          dispatch(setUser(newUser));
+          navigate("/login");
+        }}
+      >
+        등록
+      </SubmitBtn>
+    </Root>
+  );
+}
 
 // 스타일 블럭들 css
 const Root = styled.div`
@@ -338,208 +554,3 @@ const SubmitResultText = styled.div`
   color: ${(props) =>
     props.result === "ok" ? "#005DBA" : "#A9383A"};
 `;
-
-
-export default function SignupModal({onClose, onCheckDuplicate, onSubmit,}) {
-  const [idCheckResult, setIdCheckResult] = useState(null);
-  const [idCheckMessage, setIdCheckMessage] = useState("");
-  const duplicatedIds = ["test", "admin", "user", "yl"];
-  const dispatch = useDispatch();
-  const form = useSelector((state) => state.auth.register);
-  const [submitResult, setSubmitResult] = useState(null);
-  const [submitMessage, setSubmitMessage] = useState("");
-  const [checkedId, setCheckedId] = useState(""); 
-  const navigate = useNavigate();
-  const currentId = (form.id || "").trim();
-  const isIdCheckOK = idCheckResult === "ok" && checkedId === currentId;
-
-
-  const onChange = (key) => (e) => {
-    dispatch(setField({ form: "register", key, value: e.target.value }));
-  };
-
-  const validateRegisterForm = () => {
-    const id = (form.id || "").trim();
-    const email = (form.email || "").trim();
-    const pw = form.password || "";
-    const pw2 = form.passwordConfirm || "";
-    const intro = (form.intro || "").trim();
-
-    // 중복확인 여부
-    if (!isIdCheckOK) {
-      return { ok: false, message: "아이디 중복확인을 먼저 해주세요." };
-    }
-
-    // 필수값
-    if (!id) return { ok: false, message: "아이디를 입력해주세요." };
-    if (!email) return { ok: false, message: "이메일을 입력해주세요." };
-    if (!pw) return { ok: false, message: "비밀번호를 입력해주세요." };
-    if (!pw2) return { ok: false, message: "비밀번호 확인을 입력해주세요." };
-
-    // 이메일 형식
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return { ok: false, message: "이메일 형식이 올바르지 않습니다." };
-    }
-
-    // 비밀번호 정책
-    if (pw.length < 6) {
-      return { ok: false, message: "비밀번호는 6자 이상이어야 합니다." };
-    }
-
-    // 비밀번호 확인
-    if (pw !== pw2) {
-      return { ok: false, message: "비밀번호가 일치하지 않습니다." };
-    }
-
-    // 한줄소개(선택)
-    if (intro.length > 30) {
-      return { ok: false, message: "한줄소개는 30자 이내로 입력해주세요." };
-    }
-
-    return { ok: true };
-  };
-
-  return (
-    <Root>
-      <OuterFrame />
-      <InnerFrame />
-      <Border />
-
-      <LogoImg src={logo} alt="" />
-      <TopTitle>신규가입</TopTitle>
-
-      <CancelBtn type="button" onClick={() => onClose?.()}>
-        <CancelImg src={cancelImg} alt="close" />
-      </CancelBtn>
-
-      <Group157Img src={group157} alt="" />
-      <SectionTitle>가입자 정보</SectionTitle>
-
-      <Arrow135 src={arrow} alt="" />
-      <Arrow182 src={arrow} alt="" />
-      <Arrow229 src={arrow} alt="" />
-      <Arrow276 src={arrow} alt="" />
-      <Arrow347 src={arrow} alt="" />
-
-      <Line1 />
-      <Line2 />
-      <Line3 />
-      <Line4 />
-
-      <IdLabel>아이디:</IdLabel>
-      <IdInput value={form.id} onChange={ (e) => { 
-        onChange("id")(e); 
-        setIdCheckResult(null);
-        setIdCheckMessage("");
-        setCheckedId("");
-
-        setSubmitResult(null);
-        setSubmitMessage("");
-        }} />
-
-      <EmailLabel>이메일:</EmailLabel>
-      <EmailInput value={form.email} onChange={(e) => {
-        onChange("email")(e);
-        setSubmitResult(null);
-        setSubmitMessage("");
-        }} />
-
-      <PwLabel>비밀번호:</PwLabel>
-      <PwInput type="password" value={form.password} onChange={(e) => {
-          onChange("password")(e);
-          setSubmitResult(null);
-          setSubmitMessage("");
-        }} />
-
-      <Pw2Label>비밀번호 확인:</Pw2Label>
-      <Pw2Input
-        type="password"
-        value={form.passwordConfirm}
-        onChange={(e) => {
-          onChange("passwordConfirm")(e);
-          setSubmitResult(null);
-          setSubmitMessage("");
-        }}
-      />
-
-      <IntroLabel>한줄소개:</IntroLabel>
-      <IntroInput value={form.intro} onChange={(e) => {
-          onChange("intro")(e);
-          setSubmitResult(null);
-          setSubmitMessage("");
-        }} />
-
-      <CheckDupBtn 
-      type="button" 
-      onClick={() => {
-        const id = (form.id || "").trim();
-        if (!id) {
-          setIdCheckResult("fail");
-          setIdCheckMessage("아이디를 입력해주세요.");
-          setCheckedId("");
-          return;
-        }
-
-        if (duplicatedIds.includes(id)) {
-          setIdCheckResult("fail");
-          setIdCheckMessage("사용 할 수 없는 아이디 입니다.");
-          setCheckedId("");
-        } else {
-          setIdCheckResult("ok");
-          setIdCheckMessage("사용 가능한 아이디 입니다.");
-          setCheckedId(id);
-        }
-      }}>
-        중복확인
-      </CheckDupBtn>
-
-      {idCheckResult && (
-        <CheckResultText result={idCheckResult}>
-          {idCheckMessage}
-        </CheckResultText>
-      )}
-      {submitResult && (
-        <SubmitResultText result={submitResult}>
-          {submitMessage}
-        </SubmitResultText>
-      )}
-
-      <SubmitBtn
-        type="button"
-        disabled={! isIdCheckOK}
-        onClick={() => {
-          // 이전 결과 초기화
-          setSubmitResult(null);
-          setSubmitMessage("");
-
-          const v = validateRegisterForm();
-          if (!v.ok) {
-            setSubmitResult("fail");
-            setSubmitMessage(v.message);
-            return;
-          }
-
-          // ✅ 성공 처리(목업)
-          setSubmitResult("ok");
-          setSubmitMessage("등록 완료!");
-
-          console.log("회원가입 성공(목업):", {
-            id: form.id,
-            email: form.email,
-            intro: form.intro,
-          });
-
-          dispatch(resetForm("register"));
-          setIdCheckResult(null);
-          setIdCheckMessage("");
-          setCheckedId("");
-
-          navigate("/login");
-        }}
-      >
-        등록
-      </SubmitBtn>
-    </Root>
-  );
-}

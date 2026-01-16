@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { setField, setUser } from "../../modules/auth";
+import { findUser } from "../../mock/mockUserDB";
 
 import signupImg from "../../assets/group-156.png"; 
 import loginImg from "../../assets/group-158.png";  
@@ -10,6 +11,93 @@ import loginImg from "../../assets/group-158.png";
 /**
  * 로그인 폼
  */
+
+
+export default function AuthForm({onSignupClick}) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const loginForm = useSelector((state) => state.auth?.login) || { id: "", password: "" };
+
+  const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState({ id: false, password: false });
+
+  const onChange = (key) => (e) => {
+    dispatch(setField({ form: "login", key, value: e.target.value }));
+    setError("");
+    setFieldError({ id: false, password: false });
+  };
+
+  const mockLogin = () => {
+    const id = (loginForm.id || "").trim();
+    const password = loginForm.password || "";
+
+    // 필수값 체크
+    if (!id || !password) {
+      setError("아이디와 비밀번호를 입력하세요.");
+      setFieldError({ id: !id, password: !password });
+      return;
+    }
+
+    // 목업 유저 데이터
+    const mockUserDB = [
+      { id: "test", password: "123456", name: "테스트유저", intro: "테스트유저입니다" },
+      { id: "yl", password: "123456", name: "YL", intro: "개발자유저입니다." },
+    ];
+
+    const found = findUser(id, password);
+
+    if (!found) {
+      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      setFieldError({ id: true, password: true });
+      return;
+    }
+
+    // ✅ 성공: user 상태 저장 + home 이동
+    dispatch(setUser(found));
+    navigate("/home");
+  };
+
+  return (
+    <Wrap>
+      <IdLabel>이용자 ID</IdLabel>
+      <PwLabel>비밀번호</PwLabel>
+
+      <IdInput
+        value={loginForm.id}
+        onChange={onChange("id")}
+        error={fieldError.id}
+        placeholder=""
+      />
+      <PwInput
+        type="password"
+        value={loginForm.password}
+        onChange={onChange("password")}
+        error={fieldError.password}
+        placeholder=""
+      />
+      {error && <ErrorText>{error}</ErrorText>}
+
+      <SaveBox />
+      <SaveText>암호저장</SaveText>
+
+      <Line1 />
+      <Line2 />
+
+      <SignupBlock type="button" onClick={() => onSignupClick?.()}>
+        <SignupText>신규가입</SignupText>
+        <SignupImage src={signupImg} alt="" />
+      </SignupBlock>
+
+      <LoginBlock type="button" onClick={mockLogin}>
+        <LoginText>접속</LoginText>
+        <LoginImage src={loginImg} alt="" />
+      </LoginBlock>
+
+      <Hint>아이디와 비밀번호를 입력하세요~</Hint>
+    </Wrap>
+  );
+}
 
 const Wrap = styled.div`
   position: absolute;
@@ -220,89 +308,3 @@ const ErrorText = styled.div`
   white-space: nowrap;
   word-break: keep-all;
 `;
-
-export default function AuthForm({onSignupClick}) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const loginForm = useSelector((state) => state.auth?.login) || { id: "", password: "" };
-
-  const [error, setError] = useState("");
-  const [fieldError, setFieldError] = useState({ id: false, password: false });
-
-  const onChange = (key) => (e) => {
-    dispatch(setField({ form: "login", key, value: e.target.value }));
-    setError("");
-    setFieldError({ id: false, password: false });
-  };
-
-  const mockLogin = () => {
-    const id = (loginForm.id || "").trim();
-    const password = loginForm.password || "";
-
-    // 필수값 체크
-    if (!id || !password) {
-      setError("아이디와 비밀번호를 입력하세요.");
-      setFieldError({ id: !id, password: !password });
-      return;
-    }
-
-    // 목업 유저 데이터
-    const mockUserDB = [
-      { id: "test", password: "123456", name: "테스트유저" },
-      { id: "yl", password: "123456", name: "YL" },
-    ];
-
-    const found = mockUserDB.find((u) => u.id === id && u.password === password);
-
-    if (!found) {
-      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
-      setFieldError({ id: true, password: true });
-      return;
-    }
-
-    // ✅ 성공: user 상태 저장 + home 이동
-    dispatch(setUser({ id: found.id, name: found.name }));
-    navigate("/home");
-  };
-
-  return (
-    <Wrap>
-      <IdLabel>이용자 ID</IdLabel>
-      <PwLabel>비밀번호</PwLabel>
-
-      <IdInput
-        value={loginForm.id}
-        onChange={onChange("id")}
-        error={fieldError.id}
-        placeholder=""
-      />
-      <PwInput
-        type="password"
-        value={loginForm.password}
-        onChange={onChange("password")}
-        error={fieldError.password}
-        placeholder=""
-      />
-      {error && <ErrorText>{error}</ErrorText>}
-
-      <SaveBox />
-      <SaveText>암호저장</SaveText>
-
-      <Line1 />
-      <Line2 />
-
-      <SignupBlock type="button" onClick={() => onSignupClick?.()}>
-        <SignupText>신규가입</SignupText>
-        <SignupImage src={signupImg} alt="" />
-      </SignupBlock>
-
-      <LoginBlock type="button" onClick={mockLogin}>
-        <LoginText>접속</LoginText>
-        <LoginImage src={loginImg} alt="" />
-      </LoginBlock>
-
-      <Hint>아이디와 비밀번호를 입력하세요~</Hint>
-    </Wrap>
-  );
-}

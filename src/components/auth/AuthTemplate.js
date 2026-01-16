@@ -20,7 +20,7 @@ const Page = styled.div`
 
 const OuterFrame = styled.div`
   background: #acdb68;
-  border-radius: 10px 10px 0px 0px;
+  border-radius: 10px;
   border: 2px solid rgba(74, 103, 32, 0.5);
   width: 375px;
   height: 812px;

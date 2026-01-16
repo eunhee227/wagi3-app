@@ -6,7 +6,8 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { createStore, applyMiddleware, compose } from "redux";
 import rootReducer from "./modules";
-import thunk from "redux-thunk";
+
+const USER_LS_KEY = "LV_USER";
 
 const loadUser = () => {
   try {
@@ -50,5 +51,10 @@ root.render(
   </Provider>
 );
 
-
-
+store.subscribe(() => {
+  const user = store.getState().auth?.user ?? null;
+  try {
+    if (user) localStorage.setItem(USER_LS_KEY, JSON.stringify(user));
+    else localStorage.removeItem(USER_LS_KEY);
+  } catch {}
+});

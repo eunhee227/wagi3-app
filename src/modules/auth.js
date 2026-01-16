@@ -5,6 +5,8 @@ const SET_FIELD = "auth/SET_FIELD";
 const RESET_FORM = "auth/RESET_FORM";
 const SET_USER = "auth/SET_USER";
 const LOGOUT = "auth/LOGOUT";
+const savedUser = JSON.parse(localStorage.getItem("user") || "null");
+const USER_LS_KEY = "LV_USER";
 
 /** action creators */
 export const setField = createAction(
@@ -13,23 +15,23 @@ export const setField = createAction(
 );
 
 export const resetForm = createAction(RESET_FORM, (form) => form);
-export const setUser = createAction(SET_USER, (user) => user);
+export const setUser = (found) => ({ type: SET_USER, payload: found });
 export const logout = createAction(LOGOUT);
 
+function loadUser() {
+  try {
+    const raw = localStorage.getItem(USER_LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 /** initial state */
 const initialState = {
-  login: {
-    id: "",
-    password: "",
-  },
-  register: {
-    id: "",
-    email: "",
-    password: "",
-    passwordConfirm: "",
-    intro: "",
-  },
+  login: { id: "", password: "" },
+  register: { id: "", email: "", password: "", passwordConfirm: "", intro: "" },
+  user: loadUser(),
 };
 
 /** reducer */
@@ -48,10 +50,11 @@ const auth = handleActions(
       [form]: initialState[form],
     }),
 
-    [SET_USER]: (state, { payload: user }) => ({
-      ...state,
-      user,
-    }),
+    [SET_USER]: (state, { payload }) => {
+      if (payload) localStorage.setItem("user", JSON.stringify(payload));
+      else localStorage.removeItem("user");
+      return { ...state, user: payload };
+    },
 
     [LOGOUT]: (state) => ({
       ...state,
