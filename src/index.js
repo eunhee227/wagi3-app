@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { createStore, applyMiddleware, compose } from "redux";
 import rootReducer from "./modules";
+import "leaflet/dist/leaflet.css";
 
 const USER_LS_KEY = "LV_USER";
 

@@ -178,7 +178,8 @@ export default function MyPage() {
         </WithdrawBtn>
 
         {/* ✅ 하단 네비게이션 4개: home/map/friend/mypage */}
-        <BottomNav />
+        <BottomNav top={645} left={10} />
+
 
         {/* 비밀번호 패널 */}
         {openPwd && (
@@ -681,26 +682,4 @@ const IntroPanel = styled.div`
   padding: 12px;
   background: #ffffff;
   z-index: 10;
-`;
-
-const IntroEditLabel = styled.div`
-  font-size: 14px;
-  margin-bottom: 6px;
-`;
-
-const IntroEditInput = styled.input`
-  width: 100%;
-  height: 32px;
-  padding: 0 8px;
-  font-size: 14px;
-  box-sizing: border-box;
-`;
-
-const IntroSaveBtn = styled.button`
-  margin-top: 8px;
-  width: 100%;
-  height: 32px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
 `;
